@@ -2,7 +2,8 @@ package main
 
 import (
         "log"
-        "net/http"
+
+        "github.com/gin-gonic/gin"
 
         "agnis-crm/internal/handler"
         "agnis-crm/internal/storage"
@@ -15,12 +16,11 @@ func main() {
         uc := usecase.New(st)
         h := handler.New(uc)
 
-        mux := http.NewServeMux()
-        h.Register(mux)
+        router := gin.Default()
+        h.Register(router)
 
-        addr := ":8080"
-        log.Printf("serving HTTP on %s", addr)
-        if err := http.ListenAndServe(addr, mux); err != nil {
+        log.Printf("serving HTTP on :8080")
+        if err := router.Run(":8080"); err != nil {
                 log.Fatal(err)
         }
 }

@@ -1,8 +1,9 @@
 package handler
 
 import (
-        "encoding/json"
         "net/http"
+
+        "github.com/gin-gonic/gin"
 
         "agnis-crm/internal/usecase"
 )
@@ -15,20 +16,14 @@ func New(uc *usecase.Usecase) *Handler {
         return &Handler{uc: uc}
 }
 
-func (h *Handler) Register(mux *http.ServeMux) {
-        mux.HandleFunc("GET /health", h.health)
+func (h *Handler) Register(r *gin.Engine) {
+        r.GET("/health", h.health)
 }
 
-func (h *Handler) health(w http.ResponseWriter, r *http.Request) {
-        if err := h.uc.Health(r.Context()); err != nil {
-                writeJSON(w, http.StatusInternalServerError, map[string]string{"status": "error"})
+func (h *Handler) health(c *gin.Context) {
+        if err := h.uc.Health(c.Request.Context()); err != nil {
+                c.JSON(http.StatusInternalServerError, gin.H{"status": "error"})
                 return
         }
-        writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
-}
-
-func writeJSON(w http.ResponseWriter, status int, v any) {
-        w.Header().Set("Content-Type", "application/json; charset=utf-8")
-        w.WriteHeader(status)
-        _ = json.NewEncoder(w).Encode(v)
+        c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
