@@ -1,13 +1,12 @@
 package storage
 
-import "context"
+import (
+	"agnis-crm/internal/storage/memory"
+	"context"
+)
 
-type Storage struct{}
+type Storage struct{ *memory.Store }
 
-func New() *Storage {
-        return &Storage{}
-}
+func New() *Storage { return &Storage{Store: memory.NewWithSeed()} }
 
-func (s *Storage) Ping(ctx context.Context) error {
-        return nil
-}
+func (s *Storage) Ping(ctx context.Context) error { return nil }

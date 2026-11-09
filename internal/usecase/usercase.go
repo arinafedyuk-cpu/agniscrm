@@ -1,20 +1,21 @@
 package usecase
 
 import (
-        "context"
+	"context"
 
-        "agnis-crm/internal/storage"
+	"agnis-crm/internal/storage"
 )
 
 type Usecase struct {
-        storage *storage.Storage
+	storage  *storage.Storage
+	Contacts *Contacts
 }
 
 func New(st *storage.Storage) *Usecase {
-        return &Usecase{storage: st}
+	return &Usecase{storage: st, Contacts: NewContacts(st)}
 }
 
 // Health проверяет, что все нижележащие слои живы.
 func (u *Usecase) Health(ctx context.Context) error {
-        return u.storage.Ping(ctx)
+	return u.storage.Ping(ctx)
 }
