@@ -1,21 +1,16 @@
 package config
 
-import (
-	"github.com/gin-gonic/gin"
-	"os"
-)
+import "os"
 
-type Config struct{ Addr string }
+type Config struct {
+	Addr string
+}
 
-func Must() Config {
+// Load читает настройки из переменных окружения.
+func Load() Config {
 	addr := os.Getenv("HTTP_ADDR")
 	if addr == "" {
 		addr = ":8080"
 	}
-	mode := os.Getenv("GIN_MODE")
-	if mode == "" {
-		mode = gin.DebugMode
-	}
-	gin.SetMode(mode)
 	return Config{Addr: addr}
 }

@@ -1,9 +1,11 @@
 package handler_test
 
 import (
-	"agniscrm/internal/domain"
-	"agniscrm/internal/handler"
-	"agniscrm/internal/storage/memory"
+	"agnis-crm/internal/domain"
+	"agnis-crm/internal/handler"
+	"agnis-crm/internal/storage"
+	"agnis-crm/internal/storage/memory"
+	"agnis-crm/internal/usecase"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -17,7 +19,7 @@ import (
 
 func router() http.Handler {
 	gin.SetMode(gin.TestMode)
-	return handler.New(memory.NewWithSeed()).Router()
+	return contactRouter(memory.NewWithSeed())
 }
 
 func request(t *testing.T, r http.Handler, method, path, body string, want int) *httptest.ResponseRecorder {
@@ -199,9 +201,28 @@ func TestConcurrentCreatesAndCopies(t *testing.T) {
 
 func TestEmptyList(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	r := handler.New(memory.New(memory.ContactRelations{})).Router()
+	r := contactRouter(memory.New(memory.ContactRelations{}))
 	w := request(t, r, "GET", "/api/v1/contacts", "", 200)
 	if !strings.Contains(w.Body.String(), `"items":[]`) {
 		t.Fatal(w.Body.String())
 	}
+}
+
+func contactRouter(store *memory.Store) http.Handler {
+	h := handler.New(usecase.New(&storage.Storage{Store: store}))
+	r := gin.New()
+	h.Register(r)
+	return r
+}
+
+func TestSharedSkeletonRegistration(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	r := gin.Default()
+	handler.New(usecase.New(storage.New())).Register(r)
+	health := request(t, r, "GET", "/health", "", 200)
+	if !strings.Contains(health.Body.String(), `"status":"ok"`) {
+		t.Fatal(health.Body.String())
+	}
+	created := contact(t, request(t, r, "POST", "/api/v1/contacts", `{"first_name":"Тест","telegram":"test_user"}`, 201))
+	request(t, r, "GET", fmt.Sprintf("/api/v1/contacts/%d", created.ID), "", 200)
 }

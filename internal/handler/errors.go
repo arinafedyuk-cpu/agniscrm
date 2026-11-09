@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"agniscrm/internal/domain"
+	"agnis-crm/internal/domain"
 	"errors"
 	"log"
 

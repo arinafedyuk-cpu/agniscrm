@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"agniscrm/internal/domain"
+	"agnis-crm/internal/domain"
 	"bytes"
 	"encoding/json"
 	"io"
@@ -72,7 +72,7 @@ func contactInput(c *gin.Context) (domain.ContactInput, bool) {
 }
 
 func (h *Handler) ListContacts(c *gin.Context) {
-	items := h.contacts.List()
+	items := h.uc.Contacts.List()
 	c.JSON(200, gin.H{"items": items, "total": len(items)})
 }
 
@@ -81,7 +81,7 @@ func (h *Handler) GetContact(c *gin.Context) {
 	if !ok {
 		return
 	}
-	contact, err := h.contacts.Get(id)
+	contact, err := h.uc.Contacts.Get(id)
 	if err != nil {
 		domainError(c, err)
 		return
@@ -94,7 +94,7 @@ func (h *Handler) CreateContact(c *gin.Context) {
 	if !ok {
 		return
 	}
-	contact, err := h.contacts.Create(in)
+	contact, err := h.uc.Contacts.Create(in)
 	if err != nil {
 		domainError(c, err)
 		return
@@ -111,7 +111,7 @@ func (h *Handler) UpdateContact(c *gin.Context) {
 	if !ok {
 		return
 	}
-	contact, err := h.contacts.Update(id, in)
+	contact, err := h.uc.Contacts.Update(id, in)
 	if err != nil {
 		domainError(c, err)
 		return
@@ -124,7 +124,7 @@ func (h *Handler) DeleteContact(c *gin.Context) {
 	if !ok {
 		return
 	}
-	if err := h.contacts.Delete(id); err != nil {
+	if err := h.uc.Contacts.Delete(id); err != nil {
 		domainError(c, err)
 		return
 	}

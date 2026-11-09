@@ -1,7 +1,7 @@
 package memory
 
 import (
-	"agniscrm/internal/domain"
+	"agnis-crm/internal/domain"
 	"sort"
 	"sync"
 	"time"

@@ -1,23 +1,18 @@
 package handler
 
 import (
-	"agniscrm/internal/usecase"
+	"agnis-crm/internal/usecase"
+	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
-	"time"
-
-	"github.com/gin-gonic/gin"
 )
 
-type Handler struct{ contacts *usecase.Contacts }
+type Handler struct{ uc *usecase.Usecase }
 
-func New(store usecase.ContactRepository) *Handler {
-	return &Handler{contacts: usecase.NewContacts(store)}
-}
+func New(uc *usecase.Usecase) *Handler { return &Handler{uc: uc} }
 
-func (h *Handler) Router() *gin.Engine {
-	r := gin.New()
-	r.Use(gin.Logger(), gin.CustomRecovery(func(c *gin.Context, recovered any) {
+func (h *Handler) Register(r *gin.Engine) {
+	r.Use(gin.CustomRecovery(func(c *gin.Context, recovered any) {
 		log.Printf("request panic: %v", recovered)
 		writeError(c, 500, "internal_error", "внутренняя ошибка сервера")
 	}))
@@ -26,22 +21,20 @@ func (h *Handler) Router() *gin.Engine {
 	r.NoMethod(func(c *gin.Context) {
 		writeError(c, 405, "method_not_allowed", "метод не поддерживается")
 	})
-	r.GET("/health", func(c *gin.Context) { c.JSON(200, gin.H{"status": "ok"}) })
-	h.RegisterContactRoutes(r.Group("/api/v1"))
-	return r
+	r.GET("/health", h.health)
+
+	contacts := r.Group("/api/v1/contacts")
+	contacts.GET("", h.ListContacts)
+	contacts.GET("/:id", h.GetContact)
+	contacts.POST("", h.CreateContact)
+	contacts.POST("/:id/update", h.UpdateContact)
+	contacts.POST("/:id/delete", h.DeleteContact)
 }
 
-// RegisterContactRoutes also works with the team's shared router.
-func (h *Handler) RegisterContactRoutes(api *gin.RouterGroup) {
-	c := api.Group("/contacts")
-	c.GET("", h.ListContacts)
-	c.GET("/:id", h.GetContact)
-	c.POST("", h.CreateContact)
-	c.POST("/:id/update", h.UpdateContact)
-	c.POST("/:id/delete", h.DeleteContact)
-}
-
-func (h *Handler) Run(addr string) error {
-	server := &http.Server{Addr: addr, Handler: h.Router(), ReadHeaderTimeout: 5 * time.Second}
-	return server.ListenAndServe()
+func (h *Handler) health(c *gin.Context) {
+	if err := h.uc.Health(c.Request.Context()); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "error"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }

@@ -1,7 +1,7 @@
 package usecase
 
 import (
-	"agniscrm/internal/domain"
+	"agnis-crm/internal/domain"
 	"net/mail"
 	"regexp"
 	"strings"
