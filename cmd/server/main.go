@@ -1,26 +1,29 @@
 package main
 
 import (
-        "log"
+	"log"
 
-        "github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin"
 
-        "agnis-crm/internal/handler"
-        "agnis-crm/internal/storage"
-        "agnis-crm/internal/usecase"
+	"agnis-crm/internal/config"
+	"agnis-crm/internal/handler"
+	"agnis-crm/internal/storage"
+	"agnis-crm/internal/usecase"
 )
 
 func main() {
-        // Слои снизу вверх: storage → usecase → handler.
-        st := storage.New()
-        uc := usecase.New(st)
-        h := handler.New(uc)
+	cfg := config.Load()
 
-        router := gin.Default()
-        h.Register(router)
+	// Слои снизу вверх: storage → usecase → handler.
+	st := storage.New()
+	uc := usecase.New(st)
+	h := handler.New(uc)
 
-        log.Printf("serving HTTP on :8080")
-        if err := router.Run(":8080"); err != nil {
-                log.Fatal(err)
-        }
+	router := gin.Default()
+	h.Register(router)
+
+	log.Printf("serving HTTP on %s", cfg.Addr)
+	if err := router.Run(cfg.Addr); err != nil {
+		log.Fatal(err)
+	}
 }
